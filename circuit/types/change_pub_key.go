@@ -71,7 +71,12 @@ func VerifyChangePubKeyTx(
 	tx *ChangePubKeyTxConstraints,
 	accountsBefore [NbAccountsPerTx]AccountConstraints,
 ) (pubData [PubDataBitsSizePerTx]Variable) {
-	pubData = CollectPubDataFromChangePubKey(api, *tx, nonce)
+	// when the tx is not change pubkey tx, the nonce may be -1 when the tx is Layer1 tx.
+	// and in the `CollectPubDataFromChangePubKey` function, nonce need to be in range [0, 2^32-1],
+	// In order to make `CollectPubDataFromChangePubKey` works correctly, in this case we
+	// just let nonce equal 0
+	newNonce := api.Select(flag, nonce, 0)
+	pubData = CollectPubDataFromChangePubKey(api, *tx, newNonce)
 	//CheckEmptyAccountNode(api, flag, accountsBefore[0])
 
 	// verify params
